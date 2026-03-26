@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { getCurrentUser, setSessionCookie, clearSessionCookie, createSession, exchangeGoogleCode, exchangeGitHubCode, getGoogleOAuthUrl, getGitHubOAuthUrl } from "./auth";
 
 const app = new Hono();
 
@@ -11,8 +12,198 @@ app.get("/health", (c) => {
   return c.json({ status: "ok", service: "flow-atom-secondbrain" });
 });
 
+// Sign-in page
+app.get("/signin", async (c) => {
+  const user = await getCurrentUser(c);
+  if (user) {
+    return c.redirect("/plan");
+  }
+
+  const state = Math.random().toString(36).substring(7);
+  const googleOAuthUrl = getGoogleOAuthUrl(state);
+  const gitHubOAuthUrl = getGitHubOAuthUrl(state);
+
+  const html = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Sign In — Atom Second Brain</title>
+      <style>
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+        
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #fff;
+        }
+        
+        .signin-container {
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 20px;
+          padding: 60px 40px;
+          max-width: 400px;
+          width: 100%;
+          box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        }
+        
+        .logo {
+          text-align: center;
+          margin-bottom: 30px;
+          font-size: 3rem;
+        }
+        
+        h1 {
+          text-align: center;
+          font-size: 2rem;
+          margin-bottom: 10px;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+        
+        .subtitle {
+          text-align: center;
+          color: rgba(255, 255, 255, 0.7);
+          margin-bottom: 40px;
+          font-size: 0.95rem;
+        }
+        
+        .oauth-buttons {
+          display: flex;
+          flex-direction: column;
+          gap: 15px;
+        }
+        
+        .oauth-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          padding: 15px 20px;
+          background: rgba(255, 255, 255, 0.15);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          border-radius: 10px;
+          color: #fff;
+          font-size: 1rem;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          text-decoration: none;
+          font-weight: 500;
+        }
+        
+        .oauth-btn:hover {
+          background: rgba(255, 255, 255, 0.25);
+          border-color: rgba(255, 255, 255, 0.5);
+          transform: translateY(-2px);
+        }
+        
+        .oauth-btn.google {
+          background: rgba(66, 133, 244, 0.2);
+          border-color: rgba(66, 133, 244, 0.5);
+        }
+        
+        .oauth-btn.google:hover {
+          background: rgba(66, 133, 244, 0.3);
+        }
+        
+        .oauth-btn.github {
+          background: rgba(255, 255, 255, 0.1);
+          border-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .oauth-btn.github:hover {
+          background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .icon {
+          font-size: 1.2rem;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="signin-container">
+        <div class="logo">⚛️</div>
+        <h1>Atom</h1>
+        <p class="subtitle">Your Personal AI Second Brain</p>
+        
+        <div class="oauth-buttons">
+          <a href="${googleOAuthUrl}" class="oauth-btn google">
+            <span class="icon">🔵</span>
+            Sign in with Google
+          </a>
+          <a href="${gitHubOAuthUrl}" class="oauth-btn github">
+            <span class="icon">⚫</span>
+            Sign in with GitHub
+          </a>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+  
+  return c.html(html);
+});
+
+// Google OAuth callback
+app.get("/auth/google/callback", async (c) => {
+  const code = c.req.query("code");
+  if (!code) {
+    return c.json({ error: "No authorization code" }, 400);
+  }
+
+  const user = await exchangeGoogleCode(code);
+  if (!user) {
+    return c.json({ error: "Failed to authenticate" }, 401);
+  }
+
+  const token = await createSession(user);
+  setSessionCookie(c, token);
+  return c.redirect("/plan");
+});
+
+// GitHub OAuth callback
+app.get("/auth/github/callback", async (c) => {
+  const code = c.req.query("code");
+  if (!code) {
+    return c.json({ error: "No authorization code" }, 400);
+  }
+
+  const user = await exchangeGitHubCode(code);
+  if (!user) {
+    return c.json({ error: "Failed to authenticate" }, 401);
+  }
+
+  const token = await createSession(user);
+  setSessionCookie(c, token);
+  return c.redirect("/plan");
+});
+
+// Logout
+app.get("/logout", (c) => {
+  clearSessionCookie(c);
+  return c.redirect("/signin");
+});
+
 // Atom Dashboard Route
-app.get("/atom-dash", async (c) => {
+app.get("/plan", async (c) => {
+  const user = await getCurrentUser(c);
+  if (!user) {
+    return c.redirect("/signin");
+  }
+
   const html = `
     <!DOCTYPE html>
     <html lang="en">
@@ -219,7 +410,13 @@ app.get("/atom-dash", async (c) => {
         </div>
         
         <div class="footer">
-          <p>Atom v1.0 — Powered by Cloudflare Workers</p>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <p>Atom v1.0 — Your Second Brain</p>
+            <div style="display: flex; gap: 15px;">
+              <span style="font-size: 0.9rem; color: rgba(255,255,255,0.7);">👤 ${user?.name || user?.email}</span>
+              <a href="/logout" style="color: #667eea; text-decoration: none; font-size: 0.9rem;">Sign Out</a>
+            </div>
+          </div>
         </div>
       </div>
     </body>
@@ -230,7 +427,12 @@ app.get("/atom-dash", async (c) => {
 });
 
 // Atom Roadmap Route
-app.get("/atom-roadmap", async (c) => {
+app.get("/plan/roadmap", async (c) => {
+  const user = await getCurrentUser(c);
+  if (!user) {
+    return c.redirect("/signin");
+  }
+
   const html = `
     <!DOCTYPE html>
     <html lang="en">
@@ -447,7 +649,7 @@ app.get("/atom-roadmap", async (c) => {
 
 // Default route
 app.get("/", (c) => {
-  return c.redirect("/atom-dash");
+  return c.redirect("/plan");
 });
 
 export default app;

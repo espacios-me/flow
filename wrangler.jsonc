@@ -5,16 +5,16 @@
   "compatibility_date": "2025-03-07",
   "compatibility_flags": ["nodejs_compat"],
   "routes": [
-    { "pattern": "espacios.me/atom-dash", "zone_name": "espacios.me" },
-    { "pattern": "espacios.me/atom-roadmap", "zone_name": "espacios.me" },
-    { "pattern": "www.espacios.me/atom-dash", "zone_name": "espacios.me" },
-    { "pattern": "www.espacios.me/atom-roadmap", "zone_name": "espacios.me" }
+    { "pattern": "espacios.me/plan", "zone_name": "espacios.me" },
+    { "pattern": "espacios.me/plan/*", "zone_name": "espacios.me" },
+    { "pattern": "www.espacios.me/plan", "zone_name": "espacios.me" },
+    { "pattern": "www.espacios.me/plan/*", "zone_name": "espacios.me" }
   ],
   "env": {
     "production": {
       "routes": [
-        { "pattern": "espacios.me/atom-dash", "zone_name": "espacios.me" },
-        { "pattern": "espacios.me/atom-roadmap", "zone_name": "espacios.me" }
+        { "pattern": "espacios.me/plan", "zone_name": "espacios.me" },
+        { "pattern": "espacios.me/plan/*", "zone_name": "espacios.me" }
       ]
     }
   },
