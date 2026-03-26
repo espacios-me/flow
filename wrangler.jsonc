@@ -1,0 +1,25 @@
+{
+  "name": "flow",
+  "main": "src/index.ts",
+  "account_id": "b1b843ec85bc39a3a4d370ba4f84f17a",
+  "compatibility_date": "2025-03-07",
+  "compatibility_flags": ["nodejs_compat"],
+  "routes": [
+    { "pattern": "espacios.me/atom-dash", "zone_name": "espacios.me" },
+    { "pattern": "espacios.me/atom-roadmap", "zone_name": "espacios.me" },
+    { "pattern": "www.espacios.me/atom-dash", "zone_name": "espacios.me" },
+    { "pattern": "www.espacios.me/atom-roadmap", "zone_name": "espacios.me" }
+  ],
+  "env": {
+    "production": {
+      "routes": [
+        { "pattern": "espacios.me/atom-dash", "zone_name": "espacios.me" },
+        { "pattern": "espacios.me/atom-roadmap", "zone_name": "espacios.me" }
+      ]
+    }
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  }
+}

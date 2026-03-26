@@ -1,0 +1,22 @@
+{
+  "name": "flow",
+  "version": "1.0.0",
+  "description": "Atom Second Brain - Personal AI Context Engine",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "build": "tsc && wrangler deploy --dry-run",
+    "deploy": "wrangler deploy",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "hono": "^4.0.0",
+    "openai": "^4.0.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250317.0",
+    "typescript": "^5.7.3",
+    "wrangler": "^3.114.4",
+    "vitest": "^1.0.0"
+  }
+}
