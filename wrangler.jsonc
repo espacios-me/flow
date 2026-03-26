@@ -7,14 +7,17 @@
   "routes": [
     { "pattern": "espacios.me/plan", "zone_name": "espacios.me" },
     { "pattern": "espacios.me/plan/*", "zone_name": "espacios.me" },
+    { "pattern": "espacios.me/ui-guide", "zone_name": "espacios.me" },
     { "pattern": "www.espacios.me/plan", "zone_name": "espacios.me" },
-    { "pattern": "www.espacios.me/plan/*", "zone_name": "espacios.me" }
+    { "pattern": "www.espacios.me/plan/*", "zone_name": "espacios.me" },
+    { "pattern": "www.espacios.me/ui-guide", "zone_name": "espacios.me" }
   ],
   "env": {
     "production": {
       "routes": [
         { "pattern": "espacios.me/plan", "zone_name": "espacios.me" },
-        { "pattern": "espacios.me/plan/*", "zone_name": "espacios.me" }
+        { "pattern": "espacios.me/plan/*", "zone_name": "espacios.me" },
+        { "pattern": "espacios.me/ui-guide", "zone_name": "espacios.me" }
       ]
     }
   },

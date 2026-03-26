@@ -3,6 +3,7 @@ import { cors } from "hono/cors";
 import { getCurrentUser, setSessionCookie, clearSessionCookie, createSession, exchangeGoogleCode, exchangeGitHubCode, getGoogleOAuthUrl, getGitHubOAuthUrl } from "./auth";
 import { listRecentEvents, normalizeAndStore } from "./atom-ingestion";
 import type { AtomSource } from "./atom-types";
+import { getGuidelinesHTML } from "./guidelines";
 
 const app = new Hono();
 
@@ -208,6 +209,25 @@ app.get("/auth/github/callback", async (c) => {
 app.get("/logout", (c) => {
   clearSessionCookie(c);
   return c.redirect("/signin");
+});
+
+// UI Guidelines (public - no auth required)
+app.get("/ui-guide", (c) => {
+  return c.html(getGuidelinesHTML());
+});
+
+// UI Guidelines (authenticated)
+app.get("/guidelines", async (c) => {
+  const user = await getCurrentUser(c);
+  if (!user) {
+    return c.redirect("/signin");
+  }
+  return c.html(getGuidelinesHTML());
+});
+
+// Public guidelines (no auth required)
+app.get("/public/guidelines", (c) => {
+  return c.html(getGuidelinesHTML());
 });
 
 // Atom Dashboard Route
