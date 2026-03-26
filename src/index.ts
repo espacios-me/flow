@@ -198,7 +198,12 @@ app.get("/logout", (c) => {
   return c.redirect("/signin");
 });
 
-// UI Guidelines
+// UI Guidelines (public - no auth required)
+app.get("/ui-guide", (c) => {
+  return c.html(getGuidelinesHTML());
+});
+
+// UI Guidelines (authenticated)
 app.get("/guidelines", async (c) => {
   const user = await getCurrentUser(c);
   if (!user) {
