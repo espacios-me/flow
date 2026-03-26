@@ -1,28 +1,18 @@
 {
+  "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "flow",
-  "main": "src/index.ts",
-  "account_id": "b1b843ec85bc39a3a4d370ba4f84f17a",
-  "compatibility_date": "2025-03-07",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-03-27",
   "compatibility_flags": ["nodejs_compat"],
-  "routes": [
-    { "pattern": "espacios.me/plan", "zone_name": "espacios.me" },
-    { "pattern": "espacios.me/plan/*", "zone_name": "espacios.me" },
-    { "pattern": "espacios.me/ui-guide", "zone_name": "espacios.me" },
-    { "pattern": "www.espacios.me/plan", "zone_name": "espacios.me" },
-    { "pattern": "www.espacios.me/plan/*", "zone_name": "espacios.me" },
-    { "pattern": "www.espacios.me/ui-guide", "zone_name": "espacios.me" }
-  ],
-  "env": {
-    "production": {
-      "routes": [
-        { "pattern": "espacios.me/plan", "zone_name": "espacios.me" },
-        { "pattern": "espacios.me/plan/*", "zone_name": "espacios.me" },
-        { "pattern": "espacios.me/ui-guide", "zone_name": "espacios.me" }
-      ]
-    }
-  },
   "observability": {
-    "enabled": true,
-    "head_sampling_rate": 1
-  }
+    "enabled": true
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "flow",
+      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "migrations_dir": "migrations"
+    }
+  ]
 }
