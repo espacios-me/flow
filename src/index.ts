@@ -1,9 +1,22 @@
-import { Hono } from "hono";
+import { Context, Hono } from "hono";
 import { cors } from "hono/cors";
 import { getCurrentUser, setSessionCookie, clearSessionCookie, createSession, exchangeGoogleCode, exchangeGitHubCode, getGoogleOAuthUrl, getGitHubOAuthUrl } from "./auth";
+import { listRecentEvents, normalizeAndStore } from "./atom-ingestion";
+import type { AtomSource } from "./atom-types";
 import { getGuidelinesHTML } from "./guidelines";
 
 const app = new Hono();
+
+
+const SUPPORTED_INGEST_SOURCES: AtomSource[] = ["gmail", "google_drive", "linear"];
+
+function hasValidWebhookKey(c: Context): boolean {
+  const configured = process.env.WEBHOOK_API_KEY;
+  if (!configured) return true;
+  const incoming = c.req.header("x-api-key") || c.req.header("authorization")?.replace("Bearer ", "");
+  return incoming === configured;
+}
+
 
 // Enable CORS
 app.use("*", cors());
@@ -665,6 +678,50 @@ app.get("/plan/roadmap", async (c) => {
   `;
   
   return c.html(html);
+});
+
+
+
+// Ingestion webhook handlers (Phase 1 foundation)
+app.post("/api/ingest/:source", async (c) => {
+  if (!hasValidWebhookKey(c)) {
+    return c.json({ error: "Unauthorized webhook request" }, 401);
+  }
+
+  const source = c.req.param("source") as AtomSource;
+  if (!SUPPORTED_INGEST_SOURCES.includes(source)) {
+    return c.json({
+      error: "Unsupported source",
+      supportedSources: SUPPORTED_INGEST_SOURCES,
+    }, 400);
+  }
+
+  let payload: Record<string, unknown>;
+
+  try {
+    payload = await c.req.json<Record<string, unknown>>();
+  } catch (_error) {
+    return c.json({ error: "Request body must be valid JSON" }, 400);
+  }
+
+  const result = normalizeAndStore(source, payload);
+  return c.json({
+    status: result.wasDuplicate ? "duplicate" : "stored",
+    source,
+    eventId: result.event.id,
+    dedupeKey: result.event.dedupeKey,
+    ingestedAt: result.event.ingestedAt,
+  });
+});
+
+app.get("/api/events", async (c) => {
+  const user = await getCurrentUser(c);
+  if (!user) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  const limit = Number(c.req.query("limit") || "25");
+  return c.json({ events: listRecentEvents(limit) });
 });
 
 // Default route

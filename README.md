@@ -18,6 +18,8 @@ A personal AI context engine that integrates with all your digital touchpoints t
 - **`/atom-dash`** — Neural Dashboard (your Second Brain interface)
 - **`/atom-roadmap`** — Development roadmap and timeline
 - **`/health`** — Service health check
+- **`/api/ingest/:source`** — Webhook ingestion endpoint for `gmail`, `google_drive`, and `linear`
+- **`/api/events`** — Authenticated feed of recent normalized events
 
 ## Architecture
 
@@ -85,6 +87,13 @@ Required API keys:
 - `WEBHOOK_API_KEY` — Webhook authentication
 
 ## Project Roadmap
+
+### Phase 1 API Execution Notes
+- Ingestion supports `gmail`, `google_drive`, and `linear`
+- Request authentication via `x-api-key` or `Authorization: Bearer <WEBHOOK_API_KEY>`
+- Sensitive keys (`token`, `secret`, `api_key`, etc.) are redacted during normalization
+- Idempotent dedupe key shape: `<source>:<userId>:<sourceEventId>`
+
 
 ### Phase 1: Foundation ✓
 - API setup and configuration
