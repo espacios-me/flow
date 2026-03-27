@@ -11,7 +11,7 @@
     {
       "binding": "DB",
       "database_name": "flow",
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "database_id": "05bf7aff-0894-4739-ae82-0b073c4dad65",
       "migrations_dir": "migrations"
     }
   ]
