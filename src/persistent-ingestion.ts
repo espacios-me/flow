@@ -106,6 +106,19 @@ function normalizePayload(
     };
   }
 
+  if (source === "workflow" || source === "botspace") {
+    return {
+      userId: text(clean.userId) || "unknown",
+      source,
+      sourceEventId: text(clean.sourceEventId) || crypto.randomUUID(),
+      occurredAt: toIsoDate(clean.occurredAt),
+      title: text(clean.title) || (source === "workflow" ? "Workflow Response" : "BotSpace Update"),
+      body: text(clean.body),
+      participants: arrayOfStrings(clean.participants),
+      metadata: clean.metadata && typeof clean.metadata === "object" ? (clean.metadata as Record<string, unknown>) : clean,
+    };
+  }
+
   const sourceEventId = text(clean.issueId) || text(clean.id) || crypto.randomUUID();
   return {
     userId: text(clean.userId) || "unknown",

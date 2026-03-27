@@ -1,4 +1,4 @@
-export type AtomSource = "gmail" | "google_drive" | "linear";
+export type AtomSource = "gmail" | "google_drive" | "linear" | "workflow" | "botspace";
 
 export interface AtomEvent {
   id: string;

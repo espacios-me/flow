@@ -4,7 +4,7 @@ import legacyApp from "./index";
 import { listRecentEvents, normalizeAndStore, type AtomBindings } from "./persistent-ingestion";
 import type { AtomSource } from "./atom-types";
 
-const SUPPORTED_INGEST_SOURCES: AtomSource[] = ["gmail", "google_drive", "linear"];
+const SUPPORTED_INGEST_SOURCES: AtomSource[] = ["gmail", "google_drive", "linear", "workflow", "botspace"];
 
 type WorkerEnv = {
   Bindings: AtomBindings;
