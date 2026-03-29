@@ -7,4 +7,11 @@ export const ENV = {
   isProduction: process.env.NODE_ENV === "production",
   forgeApiUrl: process.env.BUILT_IN_FORGE_API_URL ?? "",
   forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? "",
+  githubToken: process.env.GITHUB_TOKEN ?? "",
+  geminiApiKey: process.env.GEMINI_API_KEY ?? "",
+  cfApiToken: process.env.CF_API_TOKEN ?? "",
+  cfAccountId: process.env.CF_ACCOUNT_ID ?? "",
+  googleOAuthClientId: process.env.GOOGLE_OAUTH_CLIENT_ID ?? "",
+  googleOAuthClientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET ?? "",
+  githubOrg: process.env.GITHUB_ORG ?? "",
 };

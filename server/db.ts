@@ -90,3 +90,111 @@ export async function getUserByOpenId(openId: string) {
 }
 
 // TODO: add feature queries here as your schema grows.
+
+import { chatSessions, chatMessages, googleOAuthTokens, githubData, workerLogs, InsertChatSession, InsertChatMessage, InsertGoogleOAuthToken, InsertGitHubData } from "../drizzle/schema";
+
+// Chat session queries
+export async function createChatSession(userId: number, title?: string, context?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(chatSessions).values({
+    userId,
+    title,
+    context,
+  });
+  return result;
+}
+
+export async function getChatSessionsByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select().from(chatSessions).where(eq(chatSessions.userId, userId));
+}
+
+export async function getChatSession(sessionId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db.select().from(chatSessions).where(eq(chatSessions.id, sessionId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+// Chat message queries
+export async function addChatMessage(sessionId: number, role: "user" | "assistant", content: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return db.insert(chatMessages).values({
+    sessionId,
+    role,
+    content,
+  });
+}
+
+export async function getChatMessages(sessionId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select().from(chatMessages).where(eq(chatMessages.sessionId, sessionId));
+}
+
+// Google OAuth token queries
+export async function saveGoogleOAuthToken(userId: number, accessToken: string, refreshToken?: string, expiresAt?: Date) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return db.insert(googleOAuthTokens).values({
+    userId,
+    accessToken,
+    refreshToken,
+    expiresAt,
+  }).onDuplicateKeyUpdate({
+    set: {
+      accessToken,
+      refreshToken,
+      expiresAt,
+      updatedAt: new Date(),
+    },
+  });
+}
+
+export async function getGoogleOAuthToken(userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db.select().from(googleOAuthTokens).where(eq(googleOAuthTokens.userId, userId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+// GitHub data cache queries
+export async function cacheGitHubData(dataType: "repo" | "issue" | "pr" | "activity", externalId: string, data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return db.insert(githubData).values({
+    dataType,
+    externalId,
+    data: JSON.stringify(data),
+  }).onDuplicateKeyUpdate({
+    set: {
+      data: JSON.stringify(data),
+      updatedAt: new Date(),
+    },
+  });
+}
+
+export async function getGitHubData(dataType: "repo" | "issue" | "pr" | "activity", externalId: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db.select().from(githubData).where(
+    eq(githubData.dataType, dataType) && eq(githubData.externalId, externalId)
+  ).limit(1);
+  
+  if (result.length > 0) {
+    return { ...result[0], data: JSON.parse(result[0].data) };
+  }
+  return undefined;
+}
