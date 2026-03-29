@@ -1,26 +1,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, Send, Loader2 } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
-
-interface Message {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  timestamp: Date;
-}
+import { useRef, useEffect, useState } from "react";
+import { useChat } from "@/hooks/useChat";
 
 export default function Chat() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      role: "assistant",
-      content: "Hello! I'm your AI assistant powered by Gemini. I can help you with questions about your Cloudflare Workers, GitHub repositories, and more. What would you like to know?",
-      timestamp: new Date(),
-    },
-  ]);
+  const [sessionId, setSessionId] = useState<number | null>(null);
   const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
+  const { messages, isLoading, createSession, sendMessage } = useChat(sessionId || undefined);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -31,31 +18,19 @@ export default function Chat() {
     scrollToBottom();
   }, [messages]);
 
+  useEffect(() => {
+    // Create a new session on mount
+    if (!sessionId) {
+      createSession("Chat Session").then((id) => {
+        if (id) setSessionId(id);
+      });
+    }
+  }, []);
+
   const handleSendMessage = async () => {
-    if (!input.trim()) return;
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: input,
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
+    if (!input.trim() || !sessionId) return;
+    await sendMessage(sessionId, input);
     setInput("");
-    setLoading(true);
-
-    // Simulate API call - will be replaced with actual Gemini API integration
-    setTimeout(() => {
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: "I'm processing your request. The Gemini API integration is being set up. Please check back soon!",
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
-      setLoading(false);
-    }, 1000);
   };
 
   return (
@@ -98,7 +73,7 @@ export default function Chat() {
               </div>
             </div>
           ))}
-          {loading && (
+          {isLoading && (
             <div className="flex justify-start">
               <div className="bg-muted text-muted-foreground px-4 py-2 rounded-lg rounded-bl-none">
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -121,20 +96,20 @@ export default function Chat() {
                   handleSendMessage();
                 }
               }}
-              disabled={loading}
-              className="flex-1 px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
-            />
-            <Button
-              onClick={handleSendMessage}
-              disabled={loading || !input.trim()}
-              size="icon"
-              className="gap-2"
-            >
-              <Send className="h-4 w-4" />
-            </Button>
+            disabled={isLoading}
+            className="flex-1 px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+          />
+          <Button
+            onClick={handleSendMessage}
+            disabled={isLoading || !input.trim() || !sessionId}
+            size="icon"
+            className="gap-2"
+          >
+            <Send className="h-4 w-4" />
+          </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            Press Enter to send. Your conversations are stored for context learning.
+            {sessionId ? "Press Enter to send. Your conversations are stored for context learning." : "Initializing chat session..."}
           </p>
         </div>
       </Card>

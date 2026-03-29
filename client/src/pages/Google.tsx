@@ -1,24 +1,20 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FolderOpen, RefreshCw, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useGoogleDrive } from "@/hooks/useIntegrations";
 
 export default function Google() {
-  const [loading, setLoading] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { authUrl, files, filesLoading, filesError, refetch } = useGoogleDrive();
+  const isAuthenticated = files.length > 0 || !filesError?.includes("Not authenticated");
 
   const handleGoogleSignIn = () => {
-    // Google OAuth flow will be implemented
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setIsAuthenticated(true);
-    }, 1000);
+    if (authUrl) {
+      window.location.href = authUrl;
+    }
   };
 
   const handleRefresh = () => {
-    setLoading(true);
-    setTimeout(() => setLoading(false), 1000);
+    refetch();
   };
 
   return (
@@ -33,18 +29,18 @@ export default function Google() {
         {isAuthenticated && (
           <Button
             onClick={handleRefresh}
-            disabled={loading}
+            disabled={filesLoading}
             variant="outline"
             size="sm"
             className="gap-2"
           >
-            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-4 w-4 ${filesLoading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
         )}
       </div>
 
-      {!isAuthenticated ? (
+      {filesError?.includes("Not authenticated") ? (
         <Card className="border-border/50">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -60,10 +56,10 @@ export default function Google() {
               </p>
               <Button
                 onClick={handleGoogleSignIn}
-                disabled={loading}
+                disabled={filesLoading}
                 className="w-full gap-2"
               >
-                {loading ? "Signing in..." : "Sign in with Google"}
+                {filesLoading ? "Signing in..." : "Sign in with Google"}
               </Button>
             </div>
           </CardContent>
@@ -79,9 +75,22 @@ export default function Google() {
               <CardDescription>Your Google Drive files and folders</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-sm text-muted-foreground text-center py-12">
-                Loading files... (API integration in progress)
-              </div>
+            <div className="space-y-3">
+              {filesLoading ? (
+                <div className="text-sm text-muted-foreground text-center py-8">Loading files...</div>
+              ) : files.length > 0 ? (
+                files.map((file: any) => (
+                  <div key={file.id} className="flex items-center justify-between p-3 border border-border rounded-lg">
+                    <div>
+                      <p className="font-medium text-sm">{file.name}</p>
+                      <p className="text-xs text-muted-foreground">{file.mimeType}</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-sm text-muted-foreground text-center py-8">No files found</div>
+              )}
+            </div>
             </CardContent>
           </Card>
         </div>

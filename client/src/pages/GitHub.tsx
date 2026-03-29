@@ -2,14 +2,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Github, RefreshCw, GitPullRequest, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useGitHub } from "@/hooks/useIntegrations";
 
 export default function GitHub() {
-  const [loading, setLoading] = useState(false);
+  const { repos, issues, prs, loading, refetch } = useGitHub();
 
   const handleRefresh = () => {
-    setLoading(true);
-    setTimeout(() => setLoading(false), 1000);
+    refetch();
   };
 
   return (
@@ -39,7 +38,7 @@ export default function GitHub() {
             <CardTitle className="text-sm font-medium">Total Repositories</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">—</div>
+            <div className="text-2xl font-bold">{repos.length}</div>
           </CardContent>
         </Card>
         <Card className="border-border/50">
@@ -47,7 +46,7 @@ export default function GitHub() {
             <CardTitle className="text-sm font-medium">Open Issues</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">—</div>
+            <div className="text-2xl font-bold">{issues.length}</div>
           </CardContent>
         </Card>
         <Card className="border-border/50">
@@ -55,7 +54,7 @@ export default function GitHub() {
             <CardTitle className="text-sm font-medium">Open PRs</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">—</div>
+            <div className="text-2xl font-bold">{prs.length}</div>
           </CardContent>
         </Card>
       </div>
